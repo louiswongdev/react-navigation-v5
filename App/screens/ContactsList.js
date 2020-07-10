@@ -4,7 +4,7 @@ import { FlatList, SafeAreaView } from 'react-native';
 import { Row, Separator } from '../components/Row';
 import users from '../data/users';
 
-export default () => (
+export default ({ navigation }) => (
   <SafeAreaView>
     <FlatList
       data={users}
@@ -19,7 +19,7 @@ export default () => (
             image={{ uri: item.picture.thumbnail }}
             title={name}
             subtitle={item.email}
-            onPress={() => alert('todo!')}
+            onPress={() => navigation.push('ContactDetails', { contact: item })}
           />
         );
       }}
