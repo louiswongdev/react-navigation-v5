@@ -2,11 +2,18 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
 
 import ContactsList from '../screens/ContactsList';
 import ContactDetails from '../screens/ContactDetails';
 import ActionsList from '../screens/ActionsList';
 import ActionDetails from '../screens/ActionDetails';
+import Settings from '../screens/Settings';
+import SignIn from '../screens/SignIn';
+import SignUp from '../screens/SignUp';
+import Loading from '../screens/Loading';
+import Modal from '../screens/Modal';
 
 const ContactsStack = createStackNavigator();
 const ContactsStackScreen = () => (
@@ -41,14 +48,127 @@ const ActionsStackScreen = () => (
 
 const AppTabs = createBottomTabNavigator();
 const AppTabsScreen = () => (
-  <AppTabs.Navigator>
-    <AppTabs.Screen name="Contacts" component={ContactsStackScreen} />
-    <AppTabs.Screen name="Actions" component={ActionsStackScreen} />
+  <AppTabs.Navigator
+    tabBarOptions={{
+      activeTintColor: 'salmon',
+    }}
+    initialRouteName="Actions"
+  >
+    <AppTabs.Screen
+      name="Contacts"
+      component={ContactsStackScreen}
+      options={{
+        tabBarIcon: ({ size, color }) => (
+          <Ionicons name="ios-contacts" size={size} color={color} />
+        ),
+      }}
+    />
+    <AppTabs.Screen
+      name="Actions"
+      component={ActionsStackScreen}
+      options={{
+        tabBarIcon: ({ size, color }) => (
+          <Ionicons
+            name="ios-checkmark-circle-outline"
+            size={size}
+            color={color}
+          />
+        ),
+      }}
+    />
   </AppTabs.Navigator>
 );
 
-export default () => (
-  <NavigationContainer>
-    <AppTabsScreen />
-  </NavigationContainer>
+const AppDrawer = createDrawerNavigator();
+const AppDrawerScreen = () => (
+  <AppDrawer.Navigator drawerType="slide" drawerPosition="left">
+    <AppDrawer.Screen
+      name="Tabs"
+      component={AppTabsScreen}
+      options={{
+        drawerLabel: 'Home',
+      }}
+    />
+    <AppDrawer.Screen name="Settings" component={Settings} options={{}} />
+  </AppDrawer.Navigator>
 );
+
+const AuthStack = createStackNavigator();
+const AuthStackScreen = () => (
+  <AuthStack.Navigator>
+    <AuthStack.Screen name="SignIn" component={SignIn} />
+    <AuthStack.Screen name="SignUp" component={SignUp} />
+  </AuthStack.Navigator>
+);
+
+const RootStack = createStackNavigator();
+const RootStackScreen = () => {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(!isLoading);
+      setUser({});
+    }, 1000);
+
+    //   setTimeout(() => {
+    //     setUser({});
+    //   }, 1000);
+  }, []);
+
+  return (
+    <RootStack.Navigator
+      headerMode="none"
+      screenOptions={{ animationEnabled: false }}
+      mode="modal"
+    >
+      {isLoading ? (
+        <RootStack.Screen name="Loading" component={Loading} />
+      ) : user ? (
+        <RootStack.Screen name="AppDrawerScreen" component={AppDrawerScreen} />
+      ) : (
+        <RootStack.Screen name="AuthStackScreen" component={AppDrawerScreen} />
+      )}
+      <RootStack.Screen
+        name="Modal"
+        component={Modal}
+        options={{ animationEnabled: true }}
+      />
+      <RootStack.Screen
+        name="Alert"
+        component={Modal}
+        options={{
+          animationEnabled: true,
+          cardStyle: { backgroundColor: 'rgba(0,0,0, 0.15)' },
+          cardOverlayEnabled: true,
+          cardStyleInterpolator: ({ current: { progress } }) => {
+            return {
+              cardStyle: {
+                opacity: progress.interpolate({
+                  inputRange: [0, 0.5, 0.9, 1],
+                  outputRange: [0, 0.25, 0.7, 1],
+                }),
+              },
+              overlayStyle: {
+                opacity: progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.5],
+                  extrapolate: 'clamp', // how it should animate
+                }),
+              },
+            };
+          },
+        }}
+      />
+    </RootStack.Navigator>
+  );
+};
+
+export default () => {
+  return (
+    <NavigationContainer>
+      <RootStackScreen />
+    </NavigationContainer>
+  );
+};
